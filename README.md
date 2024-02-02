@@ -1,0 +1,2 @@
+# bqs
+BigQuery Schema utility
