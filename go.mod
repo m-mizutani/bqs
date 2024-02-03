@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	cloud.google.com/go/bigquery v1.58.0
 	github.com/m-mizutani/gt v0.0.8
+	google.golang.org/api v0.155.0
 )
 
 require (
@@ -51,7 +52,6 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
-	google.golang.org/api v0.155.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20231212172506-995d672761c0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240102182953-50ed04b92917 // indirect
