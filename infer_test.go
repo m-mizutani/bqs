@@ -8,6 +8,132 @@ import (
 	"github.com/m-mizutani/gt"
 )
 
+func matchSchema(t testing.TB, schemas bigquery.Schema, expect bigquery.Schema) {
+	t.Helper()
+	gt.A(t, schemas).Length(len(expect))
+	for _, e := range expect {
+		gt.A(t, schemas).MatchThen(func(s *bigquery.FieldSchema) bool {
+			return s.Name == e.Name
+		}, func(t testing.TB, s *bigquery.FieldSchema) {
+			gt.Equal(t, s.Type, e.Type)
+			if e.Schema != nil {
+				matchSchema(t, s.Schema, e.Schema)
+			}
+		})
+	}
+}
+
+func TestMatchSchema(t *testing.T) {
+	testCases := map[string]struct {
+		Schemas bigquery.Schema
+		Expect  bigquery.Schema
+		Fail    bool
+	}{
+		"match": {
+			Schemas: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+				{
+					Name: "key2",
+					Type: bigquery.NumericFieldType,
+				},
+			},
+			Expect: bigquery.Schema{
+				{
+					Name: "key2",
+					Type: bigquery.NumericFieldType,
+				},
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
+		"mismatch": {
+			Schemas: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+				{
+					Name: "key2",
+					Type: bigquery.NumericFieldType,
+				},
+			},
+			Expect: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+			},
+			Fail: true,
+		},
+		"match nested": {
+			Schemas: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "key2",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+			Expect: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "key2",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+		},
+		"mismatch nested": {
+			Schemas: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "key2",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+			Expect: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "key3",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+			Fail: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t2 := &testing.T{}
+			matchSchema(t2, tc.Schemas, tc.Expect)
+			gt.Equal(t, tc.Fail, t2.Failed())
+		})
+	}
+}
+
 func TestBasicFields(t *testing.T) {
 	var row struct {
 		Str     string
@@ -103,16 +229,21 @@ func TestNestedPointerStruct(t *testing.T) {
 	}
 
 	schemas := gt.R1(bqs.Infer(row)).NoError(t)
-	gt.A(t, schemas).Length(2).At(0, func(t testing.TB, v *bigquery.FieldSchema) {
-		gt.Equal(t, v.Name, "Int")
-		gt.Equal(t, v.Type, bigquery.NumericFieldType)
-	}).At(1, func(t testing.TB, v *bigquery.FieldSchema) {
-		gt.Equal(t, v.Name, "Nest2")
-		gt.Equal(t, v.Type, bigquery.RecordFieldType)
-		gt.A(t, v.Schema).Length(1).At(0, func(t testing.TB, v *bigquery.FieldSchema) {
-			gt.Equal(t, v.Name, "Bool")
-			gt.Equal(t, v.Type, bigquery.BooleanFieldType)
-		})
+	matchSchema(t, schemas, bigquery.Schema{
+		{
+			Name: "Int",
+			Type: bigquery.NumericFieldType,
+		},
+		{
+			Name: "Nest2",
+			Type: bigquery.RecordFieldType,
+			Schema: bigquery.Schema{
+				{
+					Name: "Bool",
+					Type: bigquery.BooleanFieldType,
+				},
+			},
+		},
 	})
 }
 
@@ -250,9 +381,33 @@ func TestMap(t *testing.T) {
 				},
 			},
 		},
+		"any map": {
+			Input: map[string]interface{}{
+				"key1": "value1",
+				"key2": 2,
+			},
+			Expect: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+				{
+					Name: "key2",
+					Type: bigquery.NumericFieldType,
+				},
+			},
+		},
 		"integer key map": {
 			Input: map[int]string{
 				1: "value1",
+			},
+			Expect: nil,
+		},
+		"struct key map": {
+			Input: map[struct {
+				Key string
+			}]string{
+				{Key: "key1"}: "value1",
 			},
 			Expect: nil,
 		},
@@ -264,7 +419,8 @@ func TestMap(t *testing.T) {
 			if tc.Expect == nil {
 				gt.Error(t, err)
 			} else {
-				gt.Equal(t, schemas, tc.Expect)
+				gt.NoError(t, err)
+				matchSchema(t, schemas, tc.Expect)
 			}
 		})
 	}

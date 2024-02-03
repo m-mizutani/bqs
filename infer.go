@@ -16,7 +16,7 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 	var schema bigquery.Schema
 
 	switch data.Kind() {
-	case reflect.Ptr:
+	case reflect.Ptr, reflect.Interface:
 		return inferObject(data.Elem())
 
 	case reflect.Struct:
@@ -62,7 +62,10 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 }
 
 func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) {
-	switch data.Kind() {
+	kind := data.Kind()
+	switch kind {
+	case reflect.Interface:
+		return inferField(name, data.Elem())
 	case reflect.Ptr:
 		return inferField(name, data.Elem())
 
@@ -107,6 +110,7 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 		if data.Len() == 0 {
 			return nil, nil
 		}
+
 		// TODO: infer the type of the slice
 		return nil, nil
 
