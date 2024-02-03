@@ -3,6 +3,7 @@ package bqs
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"cloud.google.com/go/bigquery"
 )
@@ -64,9 +65,10 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) {
 	kind := data.Kind()
 	switch kind {
-	case reflect.Interface:
-		return inferField(name, data.Elem())
-	case reflect.Ptr:
+	case reflect.Ptr, reflect.Interface:
+		if data.IsNil() {
+			return nil, nil
+		}
 		return inferField(name, data.Elem())
 
 	case reflect.String:
@@ -95,6 +97,15 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 		}, nil
 
 	case reflect.Struct, reflect.Map:
+		// if data is time.Time, then it should be a TIMESTAMP
+		timeType := reflect.TypeOf(time.Time{})
+		if kind == reflect.Struct && data.Type().ConvertibleTo(timeType) {
+			return &bigquery.FieldSchema{
+				Name: name,
+				Type: bigquery.TimestampFieldType,
+			}, nil
+		}
+
 		schema, err := inferObject(data)
 		if err != nil {
 			return nil, err

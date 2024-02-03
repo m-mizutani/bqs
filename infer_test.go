@@ -2,6 +2,7 @@ package bqs_test
 
 import (
 	"testing"
+	"time"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/m-mizutani/bqs"
@@ -26,7 +27,7 @@ func TestBasicFields(t *testing.T) {
 	}
 
 	schemas := gt.R1(bqs.Infer(row)).NoError(t)
-	gt.A(t, schemas).Length(13).Have(&bigquery.FieldSchema{
+	gt.A(t, schemas).Length(14).Have(&bigquery.FieldSchema{
 		Name: "Str", Type: bigquery.StringFieldType,
 	}).Have(&bigquery.FieldSchema{
 		Name: "Int", Type: bigquery.NumericFieldType,
@@ -52,6 +53,40 @@ func TestBasicFields(t *testing.T) {
 		Name: "Float64", Type: bigquery.FloatFieldType,
 	}).Have(&bigquery.FieldSchema{
 		Name: "Bool", Type: bigquery.BooleanFieldType,
+	})
+}
+
+func TestTime(t *testing.T) {
+	t.Run("time.Time value", func(t *testing.T) {
+		row := struct {
+			Time time.Time
+		}{
+			Time: time.Now(),
+		}
+		schema := gt.R1(bqs.Infer(row)).NoError(t)
+		gt.A(t, schema).Length(1).At(0, func(t testing.TB, v *bigquery.FieldSchema) {
+			gt.Equal(t, v.Type, bigquery.TimestampFieldType)
+		})
+	})
+
+	t.Run("time.Time pointer", func(t *testing.T) {
+		row := struct {
+			Time *time.Time
+		}{
+			Time: new(time.Time),
+		}
+		schema := gt.R1(bqs.Infer(row)).NoError(t)
+		gt.A(t, schema).Length(1).At(0, func(t testing.TB, v *bigquery.FieldSchema) {
+			gt.Equal(t, v.Type, bigquery.TimestampFieldType)
+		})
+	})
+
+	t.Run("time.Time pointer with nil", func(t *testing.T) {
+		row := struct {
+			Time *time.Time
+		}{}
+		schema := gt.R1(bqs.Infer(row)).NoError(t)
+		gt.A(t, schema).Length(0)
 	})
 }
 
