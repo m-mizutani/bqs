@@ -1,7 +1,7 @@
 # bqs
 [![Go Reference](https://pkg.go.dev/badge/github.com/m-mizutani/bqs.svg)](https://pkg.go.dev/github.com/m-mizutani/bqs) [![test](https://github.com/m-mizutani/bqs/actions/workflows/test.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/test.yml) [![gosec](https://github.com/m-mizutani/bqs/actions/workflows/gosec.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/gosec.yml) [![trivy](https://github.com/m-mizutani/bqs/actions/workflows/trivy.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/trivy.yml) [![lint](https://github.com/m-mizutani/bqs/actions/workflows/lint.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/lint.yml)
 
-Utility for inferring, merging and comparing BigQuery schema in Go.
+Utility for inferring, merging and comparing BigQuery schema in Go. BigQuery provides a feature to infer schema, such as [bigquery.InferSchema](https://pkg.go.dev/cloud.google.com/go/bigquery#InferSchema) and [schema auto detection](https://cloud.google.com/bigquery/docs/schema-detect). However, `bigquery.InferSchema` does not support nested struct and map. schema auto detection is not available in the Go client library. This library provides a way to infer BigQuery schema from nested Go struct and map.
 
 ## Features
 
