@@ -11,19 +11,20 @@ import (
 
 func TestBasicFields(t *testing.T) {
 	var row struct {
-		Str     string
-		Int     int
-		Int16   int16
-		Int32   int32
-		Int64   int64
-		Uint    uint
-		Uint8   uint8
-		Uint16  uint16
-		Uint32  uint32
-		Uint64  uint64
-		Float32 float32
-		Float64 float64
-		Bool    bool
+		Str       string
+		Int       int
+		Int16     int16
+		Int32     int32
+		Int64     int64
+		Uint      uint
+		Uint8     uint8
+		Uint16    uint16
+		Uint32    uint32
+		Uint64    uint64
+		Float32   float32
+		Float64   float64
+		Bool      bool
+		Timestamp time.Time
 	}
 
 	schemas := gt.R1(bqs.Infer(row)).NoError(t)
@@ -53,6 +54,8 @@ func TestBasicFields(t *testing.T) {
 		Name: "Float64", Type: bigquery.FloatFieldType,
 	}).Have(&bigquery.FieldSchema{
 		Name: "Bool", Type: bigquery.BooleanFieldType,
+	}).Have(&bigquery.FieldSchema{
+		Name: "Timestamp", Type: bigquery.TimestampFieldType,
 	})
 }
 
