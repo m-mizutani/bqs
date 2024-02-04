@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
@@ -73,6 +74,11 @@ type UserField struct {
 }
 
 func Insert(ctx context.Context, table *bigquery.Table, data any) error {
+	retry, ok := ctx.Value("retry").(int)
+	if ok && retry > 30 {
+		return errors.New("retry count exceeded")
+	}
+
 	schema, err := bqs.Infer(data)
 	if err != nil {
 		return err
@@ -86,15 +92,40 @@ func Insert(ctx context.Context, table *bigquery.Table, data any) error {
 		newMeta := &bigquery.TableMetadata{
 			Schema: schema,
 		}
+		println("create table")
 		if err := table.Create(ctx, newMeta); err != nil {
 			return err
 		}
 	} else if !bqs.Equal(tm.Schema, schema) {
+		merged, err := bqs.Merge(tm.Schema, schema)
+		if err != nil {
+			return err
+		}
 
+		update := bigquery.TableMetadataToUpdate{
+			Schema: merged,
+		}
+		println("update schema")
+		if _, err := table.Update(ctx, update, tm.ETag); err != nil {
+			return err
+		}
 	}
 
+	println("insert data")
 	if err := table.Inserter().Put(ctx, data); err != nil {
-		return err
+		if e, ok := err.(*googleapi.Error); ok {
+			for _, errItem := range e.Errors {
+				// "invalid" error means schema is not matched. It indicates that schema has not been updated
+				if errItem.Reason != "invalid" {
+					return err
+				}
+			}
+		}
+
+		time.Sleep(time.Duration(retry) * time.Second)
+		println("retry", retry+1)
+		ctx = context.WithValue(ctx, "retry", retry+1)
+		return Insert(ctx, table, data)
 	}
 
 	return nil
