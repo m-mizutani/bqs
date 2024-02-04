@@ -1,4 +1,5 @@
 # bqs
+[![Go Reference](https://pkg.go.dev/badge/github.com/m-mizutani/bqs.svg)](https://pkg.go.dev/github.com/m-mizutani/bqs) [![test](https://github.com/m-mizutani/bqs/actions/workflows/test.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/test.yml) [![gosec](https://github.com/m-mizutani/bqs/actions/workflows/gosec.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/gosec.yml) [![trivy](https://github.com/m-mizutani/bqs/actions/workflows/trivy.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/trivy.yml) [![lint](https://github.com/m-mizutani/bqs/actions/workflows/lint.yml/badge.svg)](https://github.com/m-mizutani/bqs/actions/workflows/lint.yml)
 
 Utility for inferring, merging and comparing BigQuery schema in Go.
 
