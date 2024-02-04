@@ -2,6 +2,8 @@ package bqs
 
 import "cloud.google.com/go/bigquery"
 
+// Equal compares two bigquery.Schema and returns true if they are equal.
+// It returns false if the length of the schemas are different or the fields are different.
 func Equal(a, b bigquery.Schema) bool {
 	if len(a) != len(b) {
 		return false
