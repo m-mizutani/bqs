@@ -334,3 +334,139 @@ func TestMap(t *testing.T) {
 		})
 	}
 }
+
+func TestInferArray(t *testing.T) {
+	testCases := map[string]struct {
+		input  any
+		expect bigquery.Schema
+	}{
+		"string array": {
+			input: struct {
+				Str []string
+			}{
+				Str: []string{"a", "b"},
+			},
+			expect: bigquery.Schema{
+				{
+					Name:     "Str",
+					Type:     bigquery.StringFieldType,
+					Repeated: true,
+				},
+			},
+		},
+		"int array": {
+			input: struct {
+				Int []int
+			}{
+				Int: []int{1, 2},
+			},
+			expect: bigquery.Schema{
+				{
+					Name:     "Int",
+					Type:     bigquery.NumericFieldType,
+					Repeated: true,
+				},
+			},
+		},
+		"nested array": {
+			input: struct {
+				Nest1 []struct {
+					Str string
+
+					Nest2 []struct {
+						Int int
+					}
+				}
+			}{
+				Nest1: []struct {
+					Str string
+
+					Nest2 []struct {
+						Int int
+					}
+				}{
+					{
+						Str: "a",
+						Nest2: []struct {
+							Int int
+						}{
+							{Int: 1},
+							{Int: 2},
+						},
+					},
+				},
+			},
+			expect: bigquery.Schema{
+				{
+					Name:     "Nest1",
+					Type:     bigquery.RecordFieldType,
+					Repeated: true,
+					Schema: bigquery.Schema{
+						{
+							Name: "Str",
+							Type: bigquery.StringFieldType,
+						},
+						{
+							Name:     "Nest2",
+							Type:     bigquery.RecordFieldType,
+							Repeated: true,
+							Schema: bigquery.Schema{
+								{
+									Name: "Int",
+									Type: bigquery.NumericFieldType,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"nested pointer array": {
+			input: struct {
+				Nest1 []*struct {
+					Str string
+				}
+			}{
+				Nest1: []*struct {
+					Str string
+				}{
+					{Str: "a"},
+					{Str: "b"},
+				},
+			},
+			expect: bigquery.Schema{
+				{
+					Name:     "Nest1",
+					Type:     bigquery.RecordFieldType,
+					Repeated: true,
+					Schema: bigquery.Schema{
+						{
+							Name: "Str",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+		},
+		"invalid mixed array": {
+			input: struct {
+				Mixed []interface{}
+			}{
+				Mixed: []interface{}{"a", 1},
+			},
+			expect: nil,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			schemas, err := bqs.Infer(tc.input)
+			if tc.expect == nil {
+				gt.Error(t, err)
+			} else {
+				gt.NoError(t, err)
+				gt.True(t, bqs.Equal(schemas, tc.expect))
+			}
+		})
+	}
+}

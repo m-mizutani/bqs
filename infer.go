@@ -122,8 +122,36 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 			return nil, nil
 		}
 
-		// TODO: infer the type of the slice
-		return nil, nil
+		var field *bigquery.FieldSchema
+		for i := 0; i < data.Len(); i++ {
+			elem := data.Index(i)
+			if !elem.CanInterface() {
+				continue
+			}
+
+			newField, err := inferField(name, elem)
+			if err != nil {
+				return nil, err
+			}
+
+			if field == nil {
+				field = newField
+				continue
+			} else {
+				if newField.Type != field.Type {
+					return nil, fmt.Errorf("type conflict in array: %s: %w", name, ErrConflictField)
+				}
+				if newField.Schema != nil {
+					merged, err := Merge(field.Schema, newField.Schema)
+					if err != nil {
+						return nil, err
+					}
+					field.Schema = merged
+				}
+			}
+		}
+		field.Repeated = true
+		return field, nil
 
 	default:
 		return nil, fmt.Errorf("invalid data type: %v: %w", data.Kind(), ErrUnsupportedDataType)
