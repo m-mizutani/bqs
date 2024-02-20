@@ -23,13 +23,13 @@ func TestMerge(t *testing.T) {
 				},
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 			},
 			newSchema: bigquery.Schema{
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 				{
 					Name: "key3",
@@ -43,7 +43,7 @@ func TestMerge(t *testing.T) {
 				},
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 				{
 					Name: "key3",
@@ -62,7 +62,7 @@ func TestMerge(t *testing.T) {
 			newSchema: bigquery.Schema{
 				{
 					Name: "key1",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 			},
 			expectedSchema: nil,
@@ -124,7 +124,7 @@ func TestMerge(t *testing.T) {
 					Schema: bigquery.Schema{
 						{
 							Name: "key2",
-							Type: bigquery.NumericFieldType,
+							Type: bigquery.IntegerFieldType,
 						},
 					},
 				},
@@ -152,7 +152,7 @@ func TestMerge(t *testing.T) {
 					Schema: bigquery.Schema{
 						{
 							Name: "key3",
-							Type: bigquery.NumericFieldType,
+							Type: bigquery.IntegerFieldType,
 						},
 					},
 				},
@@ -168,7 +168,7 @@ func TestMerge(t *testing.T) {
 						},
 						{
 							Name: "key3",
-							Type: bigquery.NumericFieldType,
+							Type: bigquery.IntegerFieldType,
 						},
 					},
 				},
@@ -195,11 +195,11 @@ func TestMerge(t *testing.T) {
 					Schema: bigquery.Schema{
 						{
 							Name: "key2",
-							Type: bigquery.NumericFieldType,
+							Type: bigquery.IntegerFieldType,
 						},
 						{
 							Name: "key3",
-							Type: bigquery.NumericFieldType,
+							Type: bigquery.IntegerFieldType,
 						},
 					},
 				},

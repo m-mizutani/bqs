@@ -25,13 +25,13 @@ func TestEqual(t *testing.T) {
 				},
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 			},
 			Expect: bigquery.Schema{
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 				{
 					Name: "key1",
@@ -48,7 +48,7 @@ func TestEqual(t *testing.T) {
 				},
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 			},
 			Expect: bigquery.Schema{
