@@ -81,7 +81,7 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return &bigquery.FieldSchema{
 			Name: name,
-			Type: bigquery.NumericFieldType,
+			Type: bigquery.IntegerFieldType,
 		}, nil
 
 	case reflect.Float32, reflect.Float64:

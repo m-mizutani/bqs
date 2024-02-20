@@ -31,23 +31,23 @@ func TestBasicFields(t *testing.T) {
 	gt.A(t, schemas).Length(14).Have(&bigquery.FieldSchema{
 		Name: "Str", Type: bigquery.StringFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Int", Type: bigquery.NumericFieldType,
+		Name: "Int", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Int16", Type: bigquery.NumericFieldType,
+		Name: "Int16", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Int32", Type: bigquery.NumericFieldType,
+		Name: "Int32", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Int64", Type: bigquery.NumericFieldType,
+		Name: "Int64", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Uint", Type: bigquery.NumericFieldType,
+		Name: "Uint", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Uint8", Type: bigquery.NumericFieldType,
+		Name: "Uint8", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Uint16", Type: bigquery.NumericFieldType,
+		Name: "Uint16", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Uint32", Type: bigquery.NumericFieldType,
+		Name: "Uint32", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
-		Name: "Uint64", Type: bigquery.NumericFieldType,
+		Name: "Uint64", Type: bigquery.IntegerFieldType,
 	}).Have(&bigquery.FieldSchema{
 		Name: "Float32", Type: bigquery.FloatFieldType,
 	}).Have(&bigquery.FieldSchema{
@@ -113,7 +113,7 @@ func TestNestedStruct(t *testing.T) {
 		gt.Equal(t, v.Type, bigquery.RecordFieldType)
 		gt.A(t, v.Schema).Length(2).At(0, func(t testing.TB, v *bigquery.FieldSchema) {
 			gt.Equal(t, v.Name, "Int")
-			gt.Equal(t, v.Type, bigquery.NumericFieldType)
+			gt.Equal(t, v.Type, bigquery.IntegerFieldType)
 		}).At(1, func(t testing.TB, v *bigquery.FieldSchema) {
 			gt.Equal(t, v.Name, "Nest2")
 			gt.Equal(t, v.Type, bigquery.RecordFieldType)
@@ -144,7 +144,7 @@ func TestNestedPointerStruct(t *testing.T) {
 	gt.True(t, bqs.Equal(schemas, bigquery.Schema{
 		{
 			Name: "Int",
-			Type: bigquery.NumericFieldType,
+			Type: bigquery.IntegerFieldType,
 		},
 		{
 			Name: "Nest2",
@@ -182,7 +182,7 @@ func TestMap(t *testing.T) {
 			Expect: bigquery.Schema{
 				{
 					Name: "key1",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 			},
 		},
@@ -305,7 +305,7 @@ func TestMap(t *testing.T) {
 				},
 				{
 					Name: "key2",
-					Type: bigquery.NumericFieldType,
+					Type: bigquery.IntegerFieldType,
 				},
 			},
 		},
@@ -366,7 +366,7 @@ func TestInferArray(t *testing.T) {
 			expect: bigquery.Schema{
 				{
 					Name:     "Int",
-					Type:     bigquery.NumericFieldType,
+					Type:     bigquery.IntegerFieldType,
 					Repeated: true,
 				},
 			},
@@ -416,7 +416,7 @@ func TestInferArray(t *testing.T) {
 							Schema: bigquery.Schema{
 								{
 									Name: "Int",
-									Type: bigquery.NumericFieldType,
+									Type: bigquery.IntegerFieldType,
 								},
 							},
 						},
