@@ -15,6 +15,7 @@ func Infer(data any) (bigquery.Schema, error) {
 
 func inferObject(data reflect.Value) (bigquery.Schema, error) {
 	var schema bigquery.Schema
+	var embedded bigquery.Schema
 
 	switch data.Kind() {
 	case reflect.Ptr, reflect.Interface:
@@ -29,11 +30,11 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 
 			fieldInfo := data.Type().Field(i)
 			if fieldInfo.Anonymous {
-				embeddedSchema, err := inferObject(field)
+				resp, err := inferObject(field)
 				if err != nil {
 					return nil, err
 				}
-				schema = append(schema, embeddedSchema...)
+				embedded = append(embedded, resp...)
 				continue
 			}
 
@@ -67,6 +68,19 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 
 	default:
 		return nil, fmt.Errorf("invalid data: %v: %w", data.Kind(), ErrUnsupportedObject)
+	}
+
+	for _, field := range embedded {
+		var found bool
+		for _, f := range schema {
+			if f.Name == field.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			schema = append(schema, field)
+		}
 	}
 
 	return schema, nil

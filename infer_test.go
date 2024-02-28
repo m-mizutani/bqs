@@ -476,21 +476,33 @@ func TestInferArray(t *testing.T) {
 
 func TestInferMixIn(t *testing.T) {
 	type Nest struct {
-		Str string
+		Prev string
+		Str  string
+		Next string
 	}
 	type mix struct {
+		Prev int
 		Nest
-		Int int
+		Next int
+		Int  int
 	}
 
 	schemas := gt.R1(bqs.Infer(mix{})).NoError(t)
-	gt.A(t, schemas).Length(2).
+	gt.A(t, schemas).Length(4).
 		At(0, func(t testing.TB, v *bigquery.FieldSchema) {
-			gt.Equal(t, v.Name, "Str")
-			gt.Equal(t, v.Type, bigquery.StringFieldType)
+			gt.Equal(t, v.Name, "Prev")
+			gt.Equal(t, v.Type, bigquery.IntegerFieldType)
 		}).
 		At(1, func(t testing.TB, v *bigquery.FieldSchema) {
+			gt.Equal(t, v.Name, "Next")
+			gt.Equal(t, v.Type, bigquery.IntegerFieldType)
+		}).
+		At(2, func(t testing.TB, v *bigquery.FieldSchema) {
 			gt.Equal(t, v.Name, "Int")
 			gt.Equal(t, v.Type, bigquery.IntegerFieldType)
+		}).
+		At(3, func(t testing.TB, v *bigquery.FieldSchema) {
+			gt.Equal(t, v.Name, "Str")
+			gt.Equal(t, v.Type, bigquery.StringFieldType)
 		})
 }
