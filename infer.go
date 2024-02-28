@@ -27,6 +27,16 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 				continue
 			}
 
+			fieldInfo := data.Type().Field(i)
+			if fieldInfo.Anonymous {
+				embeddedSchema, err := inferObject(field)
+				if err != nil {
+					return nil, err
+				}
+				schema = append(schema, embeddedSchema...)
+				continue
+			}
+
 			fieldSchema, err := inferField(data.Type().Field(i).Name, field)
 			if err != nil {
 				return nil, err
