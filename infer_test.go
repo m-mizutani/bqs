@@ -506,3 +506,85 @@ func TestInferMixIn(t *testing.T) {
 			gt.Equal(t, v.Type, bigquery.StringFieldType)
 		})
 }
+
+func TestTag(t *testing.T) {
+	testCases := map[string]struct {
+		input  any
+		expect bigquery.Schema
+	}{
+		"tagged struct": {
+			input: struct {
+				Str string `bigquery:"blue"`
+				Int int    `bigquery:"orange"`
+			}{
+				Str: "a",
+				Int: 1,
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "blue",
+					Type: bigquery.StringFieldType,
+				},
+				{
+					Name: "orange",
+					Type: bigquery.IntegerFieldType,
+				},
+			},
+		},
+		"tagged nested struct": {
+			input: struct {
+				Nest struct {
+					Str string `bigquery:"blue"`
+					Int int    `bigquery:"orange"`
+				}
+			}{
+				Nest: struct {
+					Str string `bigquery:"blue"`
+					Int int    `bigquery:"orange"`
+				}{
+					Str: "a",
+					Int: 1,
+				},
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Nest",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "blue",
+							Type: bigquery.StringFieldType,
+						},
+						{
+							Name: "orange",
+							Type: bigquery.IntegerFieldType,
+						},
+					},
+				},
+			},
+		},
+		"skip field": {
+			input: struct {
+				Str string `bigquery:"-"`
+				Int int    `bigquery:"orange"`
+			}{
+				Str: "a",
+				Int: 1,
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "orange",
+					Type: bigquery.IntegerFieldType,
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			schemas, err := bqs.Infer(tc.input)
+			gt.NoError(t, err)
+			gt.True(t, bqs.Equal(schemas, tc.expect))
+		})
+	}
+}

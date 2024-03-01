@@ -38,7 +38,18 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 				continue
 			}
 
-			fieldSchema, err := inferField(data.Type().Field(i).Name, field)
+			var name string
+			tag := fieldInfo.Tag.Get("bigquery")
+			switch tag {
+			case "":
+				name = fieldInfo.Name
+			case "-":
+				continue
+			default:
+				name = tag
+			}
+
+			fieldSchema, err := inferField(name, field)
 			if err != nil {
 				return nil, err
 			}
