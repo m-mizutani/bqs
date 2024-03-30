@@ -2,6 +2,7 @@ package bqs_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/bigquery"
@@ -220,5 +221,45 @@ func TestMerge(t *testing.T) {
 				t.Errorf("unexpected merged schema: got %v, want %v", mergedSchema, tc.expectedSchema)
 			}
 		})
+	}
+}
+
+func TestMergeConflictError(t *testing.T) {
+	a := bigquery.Schema{
+		{
+			Name: "key1",
+			Type: bigquery.RecordFieldType,
+			Schema: bigquery.Schema{
+				{
+					Name: "key2",
+					Type: bigquery.IntegerFieldType,
+				},
+				{
+					Name: "key3",
+					Type: bigquery.IntegerFieldType,
+				},
+			},
+		},
+	}
+	b := bigquery.Schema{
+		{
+			Name: "key1",
+			Type: bigquery.RecordFieldType,
+			Schema: bigquery.Schema{
+				{
+					Name: "key2",
+					Type: bigquery.IntegerFieldType,
+				},
+				{
+					Name: "key3",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
+	}
+
+	_, err := bqs.Merge(a, b)
+	if !strings.Contains(err.Error(), "field='key1.key3'") {
+		t.Errorf("expected to contain field path, but not: %s", err.Error())
 	}
 }
