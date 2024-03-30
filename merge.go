@@ -58,18 +58,25 @@ func lookupField(s bigquery.Schema, name string) *bigquery.FieldSchema {
 	return nil
 }
 
+func boolToStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
 func mergeField(path string, old, new *bigquery.FieldSchema) (*bigquery.FieldSchema, error) {
 	merged := *new
 	if old.Type != new.Type {
-		return nil, fmt.Errorf("type conflict: field='%s%s': %w", path, old.Name, ErrConflictField)
+		return nil, fmt.Errorf("type conflict: field='%s%s' (old=%s, new=%s): %w", path, old.Name, old.Type, new.Type, ErrConflictField)
 	}
 
 	if old.Repeated != new.Repeated {
-		return nil, fmt.Errorf("repeated conflict: field='%s%s': %w", path, old.Name, ErrConflictField)
+		return nil, fmt.Errorf("repeated conflict: field='%s%s' (old=%s, new=%s): %w", path, old.Name, boolToStr(old.Repeated), boolToStr(new.Repeated), ErrConflictField)
 	}
 
 	if old.Required != new.Required {
-		return nil, fmt.Errorf("required conflict: field='%s%s': %w", path, old.Name, ErrConflictField)
+		return nil, fmt.Errorf("required conflict: field='%s%s' (old=%s, new=%s): %w", path, old.Name, boolToStr(old.Required), boolToStr(new.Required), ErrConflictField)
 	}
 
 	if old.Schema == nil {
