@@ -13,6 +13,10 @@ import (
 // If the field Type, Repeated, Required is different, it will return an error.
 // In other cases, old field will be overwritten by new field.
 func Merge(old, new bigquery.Schema) (bigquery.Schema, error) {
+	return merge("", old, new)
+}
+
+func merge(path string, old, new bigquery.Schema) (bigquery.Schema, error) {
 	var result bigquery.Schema
 
 	oldFields := make(map[string]*bigquery.FieldSchema)
@@ -28,7 +32,7 @@ func Merge(old, new bigquery.Schema) (bigquery.Schema, error) {
 		}
 		delete(oldFields, p.Name)
 
-		merged, err := mergeField(exist, p)
+		merged, err := mergeField(path, exist, p)
 		if err != nil {
 			return nil, err
 		}
@@ -54,25 +58,32 @@ func lookupField(s bigquery.Schema, name string) *bigquery.FieldSchema {
 	return nil
 }
 
-func mergeField(old, new *bigquery.FieldSchema) (*bigquery.FieldSchema, error) {
+func boolToStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+func mergeField(path string, old, new *bigquery.FieldSchema) (*bigquery.FieldSchema, error) {
 	merged := *new
 	if old.Type != new.Type {
-		return nil, fmt.Errorf("type conflict: %s: %w", old.Name, ErrConflictField)
+		return nil, fmt.Errorf("type conflict: field='%s%s' (old=%s, new=%s): %w", path, old.Name, old.Type, new.Type, ErrConflictField)
 	}
 
 	if old.Repeated != new.Repeated {
-		return nil, fmt.Errorf("repeated conflict: %s: %w", old.Name, ErrConflictField)
+		return nil, fmt.Errorf("repeated conflict: field='%s%s' (old=%s, new=%s): %w", path, old.Name, boolToStr(old.Repeated), boolToStr(new.Repeated), ErrConflictField)
 	}
 
 	if old.Required != new.Required {
-		return nil, fmt.Errorf("required conflict: %s: %w", old.Name, ErrConflictField)
+		return nil, fmt.Errorf("required conflict: field='%s%s' (old=%s, new=%s): %w", path, old.Name, boolToStr(old.Required), boolToStr(new.Required), ErrConflictField)
 	}
 
 	if old.Schema == nil {
 		merged.Schema = new.Schema
 	} else {
 		if new.Schema != nil {
-			schema, err := Merge(old.Schema, new.Schema)
+			schema, err := merge(path+new.Name+".", old.Schema, new.Schema)
 			if err != nil {
 				return nil, err
 			}
