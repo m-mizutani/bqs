@@ -208,6 +208,42 @@ func TestMerge(t *testing.T) {
 			expectedSchema: nil,
 			expectedError:  bqs.ErrConflictField,
 		},
+		"merge duplicated field name": {
+			oldSchema: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+			},
+			newSchema: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+			},
+			expectedSchema: nil,
+			expectedError:  bqs.ErrConflictField,
+		},
+		"merge case insensitive duplicated field name": {
+			oldSchema: bigquery.Schema{
+				{
+					Name: "key1",
+					Type: bigquery.StringFieldType,
+				},
+			},
+			newSchema: bigquery.Schema{
+				{
+					Name: "KEY1",
+					Type: bigquery.StringFieldType,
+				},
+			},
+			expectedSchema: nil,
+			expectedError:  bqs.ErrConflictField,
+		},
 	}
 
 	for name, tc := range testCases {

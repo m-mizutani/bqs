@@ -2,6 +2,7 @@ package bqs
 
 import (
 	"fmt"
+	"strings"
 
 	"cloud.google.com/go/bigquery"
 )
@@ -25,7 +26,10 @@ func merge(path string, old, new bigquery.Schema) (bigquery.Schema, error) {
 	}
 
 	for _, p := range new {
-		exist := lookupField(old, p.Name)
+		exist, err := lookupField(old, path, p.Name)
+		if err != nil {
+			return nil, err
+		}
 		if exist == nil {
 			result = append(result, p)
 			continue
@@ -49,13 +53,20 @@ func merge(path string, old, new bigquery.Schema) (bigquery.Schema, error) {
 	return result, nil
 }
 
-func lookupField(s bigquery.Schema, name string) *bigquery.FieldSchema {
+func lookupField(s bigquery.Schema, path, name string) (*bigquery.FieldSchema, error) {
+	var result *bigquery.FieldSchema
 	for i, p := range s {
 		if p.Name == name {
-			return s[i]
+			if result == nil {
+				result = s[i]
+			} else {
+				return nil, fmt.Errorf("duplicated field name: '%s%s': %w", path, name, ErrConflictField)
+			}
+		} else if strings.EqualFold(p.Name, name) {
+			return nil, fmt.Errorf("case insensitive duplicated field name: '%s%s': %w", path, name, ErrConflictField)
 		}
 	}
-	return nil
+	return result, nil
 }
 
 func boolToStr(b bool) string {
