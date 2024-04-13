@@ -38,15 +38,21 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 				continue
 			}
 
+			jsonTag := fieldInfo.Tag.Get("json")
+			bqTag := fieldInfo.Tag.Get("bigquery")
+
 			var name string
-			tag := fieldInfo.Tag.Get("bigquery")
-			switch tag {
-			case "":
-				name = fieldInfo.Name
-			case "-":
+			switch {
+			case bqTag == "-":
 				continue
+			case bqTag != "":
+				name = bqTag
+			case jsonTag == "-":
+				continue
+			case jsonTag != "":
+				name = jsonTag
 			default:
-				name = tag
+				name = fieldInfo.Name
 			}
 
 			fieldSchema, err := inferField(name, field)
