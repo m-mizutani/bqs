@@ -89,7 +89,9 @@ func TestTime(t *testing.T) {
 			Time *time.Time
 		}{}
 		schema := gt.R1(bqs.Infer(row)).NoError(t)
-		gt.A(t, schema).Length(0)
+		gt.A(t, schema).Length(1).At(0, func(t testing.TB, v *bigquery.FieldSchema) {
+			gt.Equal(t, v.Type, bigquery.TimestampFieldType)
+		})
 	})
 }
 
@@ -134,10 +136,8 @@ func TestNestedPointerStruct(t *testing.T) {
 		Nest2 *nest2
 	}
 	row := nest1{
-		Int: 1,
-		Nest2: &nest2{
-			Bool: true,
-		},
+		Int:   1,
+		Nest2: nil,
 	}
 
 	schemas := gt.R1(bqs.Infer(row)).NoError(t)

@@ -20,6 +20,10 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 
 	switch data.Kind() {
 	case reflect.Ptr, reflect.Interface:
+		if data.IsNil() {
+			value := reflect.New(data.Type().Elem())
+			return inferObject(value)
+		}
 		return inferObject(data.Elem())
 
 	case reflect.Struct:
@@ -109,7 +113,8 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 	switch kind {
 	case reflect.Ptr, reflect.Interface:
 		if data.IsNil() {
-			return nil, nil
+			value := reflect.New(data.Type().Elem())
+			return inferField(name, value)
 		}
 		return inferField(name, data.Elem())
 
