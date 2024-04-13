@@ -625,6 +625,32 @@ func TestTag(t *testing.T) {
 				},
 			},
 		},
+		"ignore json omitempty tag": {
+			input: struct {
+				Str string `json:",omitempty"`
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Str",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
+		"Use only name part of json tag": {
+			input: struct {
+				Str string `json:"red,omitempty"`
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "red",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
 	}
 
 	for name, tc := range testCases {
