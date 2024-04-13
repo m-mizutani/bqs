@@ -578,6 +578,53 @@ func TestTag(t *testing.T) {
 				},
 			},
 		},
+		"prioritize bigquery tag than json": {
+			input: struct {
+				Str string `bigquery:"blue" json:"red"`
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "blue",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
+		"use json tag if bigquery tag is not defined": {
+			input: struct {
+				Str string `json:"red"`
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "red",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
+		"skip if bigquery has '-' tag even if having json tag": {
+			input: struct {
+				Str string `bigquery:"-" json:"red"`
+			}{
+				Str: "a",
+			},
+			expect: nil,
+		},
+		"do not skip even if having '-' tag in json": {
+			input: struct {
+				Str string `bigquery:"red" json:"-"`
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "red",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		},
 	}
 
 	for name, tc := range testCases {
