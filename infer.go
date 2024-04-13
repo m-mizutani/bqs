@@ -151,6 +151,9 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 		if err != nil {
 			return nil, err
 		}
+		if len(schema) == 0 {
+			return nil, nil
+		}
 
 		return &bigquery.FieldSchema{
 			Name:   name,

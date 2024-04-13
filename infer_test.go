@@ -635,3 +635,16 @@ func TestTag(t *testing.T) {
 		})
 	}
 }
+
+func TestEmptyStructField(t *testing.T) {
+	s := struct {
+		Str  string
+		Time struct {
+			time.Time
+		}
+	}{}
+
+	schemas := gt.R1(bqs.Infer(s)).NoError(t)
+	gt.A(t, schemas).Length(1)
+	gt.Equal(t, schemas[0].Name, "Str")
+}
