@@ -3,6 +3,7 @@ package bqs
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/bigquery"
@@ -38,7 +39,7 @@ func inferObject(data reflect.Value) (bigquery.Schema, error) {
 				continue
 			}
 
-			jsonTag := fieldInfo.Tag.Get("json")
+			jsonTag := strings.Split(fieldInfo.Tag.Get("json"), ",")[0]
 			bqTag := fieldInfo.Tag.Get("bigquery")
 
 			var name string
