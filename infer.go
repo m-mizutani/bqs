@@ -169,7 +169,20 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 
 	case reflect.Slice, reflect.Array:
 		if data.Len() == 0 {
-			return nil, nil
+			elem := reflect.New(data.Type().Elem()).Elem()
+			if elem.Kind() == reflect.Interface {
+				return nil, nil
+			}
+
+			schema, err := inferField(name, elem)
+			if err != nil {
+				return nil, err
+			}
+			if schema == nil {
+				return nil, nil
+			}
+			schema.Repeated = true
+			return schema, nil
 		}
 
 		var field *bigquery.FieldSchema

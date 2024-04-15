@@ -339,11 +339,22 @@ func TestMap(t *testing.T) {
 }
 
 func TestInferArray(t *testing.T) {
-	testCases := map[string]struct {
+	type testCase struct {
 		input  any
 		expect bigquery.Schema
-	}{
-		"string array": {
+	}
+	test := func(t *testing.T, tc testCase) {
+		schemas, err := bqs.Infer(tc.input)
+		if tc.expect == nil {
+			gt.Error(t, err)
+		} else {
+			gt.NoError(t, err)
+			gt.True(t, bqs.Equal(schemas, tc.expect))
+		}
+	}
+
+	t.Run("string array", func(t *testing.T) {
+		test(t, testCase{
 			input: struct {
 				Str []string
 			}{
@@ -356,8 +367,11 @@ func TestInferArray(t *testing.T) {
 					Repeated: true,
 				},
 			},
-		},
-		"int array": {
+		})
+	})
+
+	t.Run("int array", func(t *testing.T) {
+		test(t, testCase{
 			input: struct {
 				Int []int
 			}{
@@ -370,8 +384,11 @@ func TestInferArray(t *testing.T) {
 					Repeated: true,
 				},
 			},
-		},
-		"nested array": {
+		})
+	})
+
+	t.Run("nested array", func(t *testing.T) {
+		test(t, testCase{
 			input: struct {
 				Nest1 []struct {
 					Str string
@@ -423,8 +440,11 @@ func TestInferArray(t *testing.T) {
 					},
 				},
 			},
-		},
-		"nested pointer array": {
+		})
+	})
+
+	t.Run("nested pointer array", func(t *testing.T) {
+		test(t, testCase{
 			input: struct {
 				Nest1 []*struct {
 					Str string
@@ -450,28 +470,78 @@ func TestInferArray(t *testing.T) {
 					},
 				},
 			},
-		},
-		"invalid mixed array": {
+		})
+	})
+
+	t.Run("nested pointer array with nil", func(t *testing.T) {
+		test(t, testCase{
 			input: struct {
 				Mixed []interface{}
 			}{
 				Mixed: []interface{}{"a", 1},
 			},
 			expect: nil,
-		},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			schemas, err := bqs.Infer(tc.input)
-			if tc.expect == nil {
-				gt.Error(t, err)
-			} else {
-				gt.NoError(t, err)
-				gt.True(t, bqs.Equal(schemas, tc.expect))
-			}
 		})
-	}
+	})
+
+	t.Run("ignore empty any array", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Str   string
+				Empty []interface{}
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Str",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		})
+	})
+
+	t.Run("not ignore empty string array", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Str []string
+			}{
+				Str: nil,
+			},
+			expect: bigquery.Schema{
+				{
+					Name:     "Str",
+					Type:     bigquery.StringFieldType,
+					Repeated: true,
+				},
+			},
+		})
+	})
+
+	t.Run("not ignore empty struct array", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Empty []struct {
+					Int int
+				}
+			}{
+				Empty: nil,
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Empty",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "Int",
+							Type: bigquery.IntegerFieldType,
+						},
+					},
+					Repeated: true,
+				},
+			},
+		})
+	})
 }
 
 func TestInferMixIn(t *testing.T) {
