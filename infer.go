@@ -113,6 +113,9 @@ func inferField(name string, data reflect.Value) (*bigquery.FieldSchema, error) 
 	switch kind {
 	case reflect.Ptr, reflect.Interface:
 		if data.IsNil() {
+			if data.Type().Kind() == reflect.Interface {
+				return nil, nil
+			}
 			value := reflect.New(data.Type().Elem())
 			return inferField(name, value)
 		}

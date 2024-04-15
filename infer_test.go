@@ -544,6 +544,124 @@ func TestInferArray(t *testing.T) {
 	})
 }
 
+func TestInterface(t *testing.T) {
+	type testCase struct {
+		input  any
+		expect bigquery.Schema
+	}
+	test := func(t *testing.T, tc testCase) {
+		schemas, err := bqs.Infer(tc.input)
+		if tc.expect == nil {
+			gt.Error(t, err)
+		} else {
+			gt.NoError(t, err)
+			gt.True(t, bqs.Equal(schemas, tc.expect))
+		}
+	}
+
+	t.Run("empty interface", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Str   string
+				Empty interface{}
+			}{
+				Str:   "a",
+				Empty: nil,
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Str",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		})
+	})
+
+	t.Run("string interface", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Str interface{}
+			}{
+				Str: "a",
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Str",
+					Type: bigquery.StringFieldType,
+				},
+			},
+		})
+	})
+
+	t.Run("int interface", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Int interface{}
+			}{
+				Int: 1,
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Int",
+					Type: bigquery.IntegerFieldType,
+				},
+			},
+		})
+	})
+
+	t.Run("nested interface", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Nest1 interface{}
+			}{
+				Nest1: struct {
+					Str string
+				}{
+					Str: "a",
+				},
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Nest1",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "Str",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+		})
+	})
+
+	t.Run("nested pointer interface", func(t *testing.T) {
+		test(t, testCase{
+			input: struct {
+				Nest1 interface{}
+			}{
+				Nest1: &struct {
+					Str string
+				}{
+					Str: "a",
+				},
+			},
+			expect: bigquery.Schema{
+				{
+					Name: "Nest1",
+					Type: bigquery.RecordFieldType,
+					Schema: bigquery.Schema{
+						{
+							Name: "Str",
+							Type: bigquery.StringFieldType,
+						},
+					},
+				},
+			},
+		})
+	})
+}
+
 func TestInferMixIn(t *testing.T) {
 	type Nest struct {
 		Prev string
