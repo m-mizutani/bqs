@@ -62,6 +62,47 @@ This will create a table with the following schema and insert the rows.
 | 2024-02-04 03:29:55.504942 | Alice | *null*    | Red               |
 | 2024-02-04 03:29:55.504943 | Bob   | 30  | *null*                 |
 
+## CLI
+
+### Install
+
+```bash
+go install github.com/m-mizutani/bqs/cmd/bqs@latest
+```
+
+### Example
+
+```bash
+$ cat test.jsonl
+{"color":"blue", "number":5, "property":{"age": 18}}
+{"color":"green", "number":1, "property":{"name":"Alice"}}
+$ bqs infer test.jsonl
+[
+ {
+  "name": "color",
+  "type": "STRING"
+ },
+ {
+  "name": "number",
+  "type": "FLOAT"
+ },
+ {
+  "fields": [
+   {
+    "name": "name",
+    "type": "STRING"
+   },
+   {
+    "name": "age",
+    "type": "FLOAT"
+   }
+  ],
+  "name": "property",
+  "type": "RECORD"
+ }
+]
+```
+
 ## License
 
 Apache License 2.0
