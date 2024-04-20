@@ -42,7 +42,7 @@ func main() {
 			case "-", "stdout":
 				logWriter = os.Stdout
 			default:
-				file, err := os.OpenFile(filepath.Clean(logOutput), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+				file, err := os.Create(filepath.Clean(logOutput))
 				if err != nil {
 					return goerr.Wrap(err, "Failed to open log file")
 				}
